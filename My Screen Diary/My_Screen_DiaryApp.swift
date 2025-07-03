@@ -11,7 +11,7 @@ import SwiftUI
 struct My_Screen_DiaryApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            PageWrapperView()
         }
     }
 }
