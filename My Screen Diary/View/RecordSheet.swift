@@ -1,24 +1,13 @@
-//
-//  RecordSheet.swift
-//  My Screen Diary
-//
-//  Created by 下平裕次郎 on R 7/07/02.
-//
 import SwiftUI
 
 struct RecordSheetView: View {
     @Environment(\.dismiss) var dismiss
-
-    @State private var selectedDate = Date()
-    @State private var usageTime = Date()
-    @State private var selectedPurpose = "SNS"
-    @State private var satisfaction = 4.0
-    @State private var memo = ""
+    @StateObject private var viewModel = RecordViewModel()
 
     let purposes = ["SNS", "動画", "ゲーム", "仕事", "その他"]
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack {
             HStack {
                 Button("キャンセル") {
                     print("キャンセルしました")
@@ -28,7 +17,7 @@ struct RecordSheetView: View {
                 .bold()
                 Spacer()
                 Button("保存") {
-                    print("保存しました")
+                    viewModel.saveRecord()
                     dismiss()
                 }
                 .foregroundColor(Color(hex: "#F1F1E6"))
@@ -39,14 +28,14 @@ struct RecordSheetView: View {
 
             Form {
                 Section(header: Text("日時情報")) {
-                    DatePicker("日付を選択", selection: $selectedDate, displayedComponents: [.date])
+                    DatePicker("日付を選択", selection: $viewModel.record.date, displayedComponents: [.date])
                     
-                    DatePicker("使用時間", selection: $usageTime, displayedComponents: [.hourAndMinute])
+                    DatePicker("使用時間", selection: $viewModel.record.usetime, displayedComponents: [.hourAndMinute])
                         .datePickerStyle(.compact)
                 }
                 
                 Section(header: Text("利用内容")) {
-                    Picker("使用目的", selection: $selectedPurpose) {
+                    Picker("使用目的", selection: $viewModel.record.purpose) {
                         ForEach(purposes, id: \.self) {
                             Text($0)
                         }
@@ -54,12 +43,12 @@ struct RecordSheetView: View {
                     
                     VStack(alignment: .leading) {
                         Text("スマホ使用満足度")
-                        Slider(value: $satisfaction, in: 1...7, step: 1)
+                        Slider(value: $viewModel.record.satisfaction, in: 1...7, step: 1)
                     }
                 }
 
                 Section(header: Text("一言メモ")) {
-                    TextEditor(text: $memo)
+                    TextEditor(text: $viewModel.record.memo)
                         .frame(height: 100)
                         .background(Color.white)
                         .cornerRadius(8)
