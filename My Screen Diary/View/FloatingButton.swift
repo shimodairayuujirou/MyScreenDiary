@@ -1,10 +1,3 @@
-//
-//  FloatingButton.swift
-//  My Screen Diary
-//
-//  Created by 下平裕次郎 on R 7/07/02.
-//
-
 import SwiftUI
 
 struct FloatingButton: View {
