@@ -2,6 +2,7 @@ import Foundation
 
 struct Record: Identifiable, Codable {
     var id: String = UUID().uuidString
+    var userId: String = ""
     var date: Date = Date()
     var usetime: Date = Date() // View用の一時的なDate型
     var purpose: String = "SNS"

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5C2221C02E1F62B8001DC3EA /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 5C2221BF2E1F62B8001DC3EA /* FirebaseAuth */; };
 		5CA08DDC2E166EE200DD6ECF /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 5CA08DDB2E166EE200DD6ECF /* FirebaseFirestore */; };
 /* End PBXBuildFile section */
 
@@ -57,6 +58,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				5CA08DDC2E166EE200DD6ECF /* FirebaseFirestore in Frameworks */,
+				5C2221C02E1F62B8001DC3EA /* FirebaseAuth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -126,6 +128,7 @@
 			name = "My Screen Diary";
 			packageProductDependencies = (
 				5CA08DDB2E166EE200DD6ECF /* FirebaseFirestore */,
+				5C2221BF2E1F62B8001DC3EA /* FirebaseAuth */,
 			);
 			productName = "My Screen Diary";
 			productReference = 5CA08C8F2E001C4C00DD6ECF /* My Screen Diary.app */;
@@ -588,6 +591,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		5C2221BF2E1F62B8001DC3EA /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5CA08DA52E1665C900DD6ECF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
 		5CA08DDB2E166EE200DD6ECF /* FirebaseFirestore */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5CA08DA52E1665C900DD6ECF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;

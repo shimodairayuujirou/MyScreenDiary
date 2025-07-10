@@ -1,5 +1,6 @@
 import SwiftUI
 import FirebaseCore
+import FirebaseAuth
 
 class AppDelegate: NSObject, UIApplicationDelegate {
   func application(_ application: UIApplication,
@@ -11,10 +12,15 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
 @main
 struct My_Screen_DiaryApp: App {
+    @StateObject private var authViewModel = AuthViewModel()
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     var body: some Scene {
         WindowGroup {
-            PageWrapperView()
+            if authViewModel.isAuthenticated {
+                PageWrapperView()
+            } else {
+                AuthView()
+            }
         }
     }
 }

@@ -17,8 +17,10 @@ struct RecordSheetView: View {
                 .bold()
                 Spacer()
                 Button("保存") {
+                    viewModel.onSaveSuccess = {dismiss()}
                     viewModel.saveRecord()
-                    dismiss()
+                }.alert(isPresented: $viewModel.showAlert) {
+                    Alert(title: Text("エラー"), message: Text(viewModel.alertMessage ?? "不明なエラー"), dismissButton: .default(Text("OK")))
                 }
                 .foregroundColor(Color(hex: "#F1F1E6"))
                 .bold()
@@ -49,7 +51,7 @@ struct RecordSheetView: View {
 
                 Section(header: Text("一言メモ")) {
                     TextEditor(text: $viewModel.record.memo)
-                        .frame(height: 100)
+                        .frame(height: 105)
                         .background(Color.white)
                         .cornerRadius(8)
                 }
