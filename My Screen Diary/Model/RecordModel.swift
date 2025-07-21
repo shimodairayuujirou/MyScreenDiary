@@ -1,6 +1,6 @@
 import Foundation
 
-struct Record: Identifiable, Codable {
+struct Record: Identifiable, Codable, Equatable{
     var id: String = UUID().uuidString
     var userId: String = ""
     var date: Date = Date()

@@ -14,13 +14,13 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 struct My_Screen_DiaryApp: App {
     @StateObject private var authViewModel = AuthViewModel()
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
+    @StateObject private var appState = AppState()
     var body: some Scene {
         WindowGroup {
-            if authViewModel.isAuthenticated {
-                PageWrapperView()
-            } else {
-                AuthView()
-            }
+            RootView()
+            .environmentObject(authViewModel)
+            .environmentObject(appState)
+            .id(appState.rootViewId)
         }
     }
 }

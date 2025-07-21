@@ -3,12 +3,15 @@ import FirebaseAuth
 import SwiftUI
 
 class AuthViewModel: ObservableObject {
-    @Published var isAuthenticated = false
+    @AppStorage("isAuthenticated") var isAuthenticated = false
     @Published var email = ""
     @Published var password = ""
     
     init() {
-        // アプリ起動時にログイン状態を確認
+        checkAuthentication()
+    }
+
+    func checkAuthentication() {
         self.isAuthenticated = Auth.auth().currentUser != nil
     }
 
@@ -32,12 +35,19 @@ class AuthViewModel: ObservableObject {
         }
     }
 
-    func logout() {
+    func logout(appState: AppState) {
         do {
             try Auth.auth().signOut()
             self.isAuthenticated = false
+            appState.rootViewId = UUID()
+            print("ログアウト完了 - isAuthenticated: \(self.isAuthenticated)")
+                    print("Auth.auth().currentUser: \(String(describing: Auth.auth().currentUser))")
         } catch {
             print("ログアウトエラー: \(error.localizedDescription)")
         }
     }
+}
+
+class AppState: ObservableObject {
+    @Published var rootViewId = UUID()
 }
