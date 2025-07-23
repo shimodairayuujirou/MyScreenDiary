@@ -1,25 +1,6 @@
 import SwiftUI
 import Combine
 
-//struct CalendarView: View {
-//    @StateObject private var viewModel: ContentViewModel = .init()
-//
-//    var body: some View {
-//        ZStack{
-//            VStack{
-//                UICalendarViewRepresentable(didSelectDateSubject: viewModel.didSelectDateSubject)
-//                            .padding(.bottom, 60)
-//                            .alert(isPresented: $viewModel.showAlert) {
-//                                Alert(title: Text("エラー"), message: Text(viewModel.alertMessage ?? "不明なエラー"), dismissButton: .default(Text("OK")))
-//                            }
-//            }
-//            .background(Color(hex: "#F1F1E6"))
-//            FloatingButton()
-//        }
-//        
-//    }
-//}
-
 struct CalendarView: View {
     @StateObject private var viewModel: ContentViewModel = .init()
     @State private var showDetail = false
@@ -48,7 +29,10 @@ struct CalendarView: View {
             }
             .navigationDestination(isPresented: $showDetail) {
                 if let record = viewModel.selectedRecord {
-                    RecordDetailView(record: record)
+                    RecordDetailView(
+                        viewModel: DetailViewModel(record: record),
+                        record: record
+                    )
                 }
             }
         }

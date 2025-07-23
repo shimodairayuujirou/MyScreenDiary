@@ -1,20 +1,78 @@
 import SwiftUI
 
 struct RecordDetailView: View {
-    @StateObject private var viewModel = DetailViewModel()
+    @ObservedObject var viewModel: DetailViewModel
+    @Environment(\.dismiss) var dismiss
+    
     let record: Record
-
+    let purposes = ["SNS", "動画", "ゲーム", "仕事", "その他"]
+    
     var body: some View {
-        VStack(spacing: 20) {
-            Text("日付: \(viewModel.formattedDate(record.date))")
-            Text("使用目的: \(record.purpose)")
-            Text("満足度: \(Int(record.satisfaction))")
-            Text("メモ: \(record.memo)")
-            Text("使用時間: \(viewModel.formatDuration(minutes: record.durationMinutes))")
+        VStack {
+            Form {
+                Section(header: Text("日時情報")) {
+                    DatePicker("日付を選択", selection: Binding(
+                        get: { viewModel.record.date },
+                        set: { viewModel.record.date = $0 }
+                    ),displayedComponents: [.date])
+                    
+                    DatePicker("使用時間", selection: Binding(
+                        get: { viewModel.record.usetime },
+                        set: { viewModel.record.usetime = $0 }
+                    ),displayedComponents: [.hourAndMinute])
+                    .datePickerStyle(.compact)
+                }
+                
+                Section(header: Text("利用内容")) {
+                    Picker("使用目的", selection: $viewModel.record.purpose) {
+                        ForEach(purposes, id: \.self) {
+                            Text($0)
+                        }
+                    }
+                    
+                    VStack(alignment: .leading) {
+                        Text("スマホ使用満足度")
+                        Slider(value: $viewModel.record.satisfaction, in: 1...7, step: 1)
+                    }
+                }
+
+                Section(header: Text("一言メモ")) {
+                    TextEditor(text: $viewModel.record.memo)
+                        .frame(height: 105)
+                        .background(Color.white)
+                        .cornerRadius(8)
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .navigationBarBackButtonHidden(true)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image(systemName: "chevron.left")
+                            .foregroundColor(.white)
+                            .font(.system(size: 17, weight: .semibold))
+                    }
+                }
+                ToolbarItem(placement: .principal) {
+                    Text("記録情報")
+                        .font(.headline)
+                        .foregroundStyle(Color(hex: "#F1F1E6"))
+                }
+
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("保存") {
+
+                    }
+                    .foregroundColor(Color(hex: "#F1F1E6"))
+                    .bold()
+                }
+            }
+            .toolbarBackground(Color(hex: "#528261"), for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
         }
-        .padding()
-        .navigationTitle("記録の詳細")
+        .background(Color(hex: "#F1F1E6"))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(hex: "#F1F1E6").ignoresSafeArea())
     }
 }

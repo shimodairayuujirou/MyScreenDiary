@@ -1,6 +1,12 @@
 import SwiftUI
 
 class DetailViewModel: ObservableObject {
+    @Published var record: Record
+
+    init(record: Record) {
+        self.record = record
+    }
+    
     func formattedDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy/MM/dd"
