@@ -62,7 +62,3 @@ struct RecordSheetView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
-
-#Preview {
-    RecordSheetView()
-}

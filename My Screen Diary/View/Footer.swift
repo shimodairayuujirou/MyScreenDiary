@@ -32,7 +32,3 @@ struct FooterMenuView: View {
         .background(Color(hex: "#528261"))
     }
 }
-
-#Preview {
-    FooterMenuView(selected: Binding.constant(.calendar))
-}

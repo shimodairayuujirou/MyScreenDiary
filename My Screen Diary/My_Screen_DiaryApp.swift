@@ -21,6 +21,7 @@ struct My_Screen_DiaryApp: App {
             .environmentObject(authViewModel)
             .environmentObject(appState)
             .id(appState.rootViewId)
+            .preferredColorScheme(.light)
         }
     }
 }
