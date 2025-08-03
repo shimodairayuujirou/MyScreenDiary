@@ -31,7 +31,8 @@ struct RecordSheetView: View {
             Form {
                 Section(header: Text("日時情報")) {
                     DatePicker("日付を選択", selection: $viewModel.record.date, displayedComponents: [.date])
-                    
+                        .environment(\.locale, Locale(identifier: "ja_JP"))
+                        .environment(\.calendar, Calendar(identifier: .gregorian))
                     DatePicker("使用時間", selection: $viewModel.record.usetime, displayedComponents: [.hourAndMinute])
                         .datePickerStyle(.compact)
                 }

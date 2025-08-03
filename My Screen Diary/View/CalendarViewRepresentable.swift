@@ -16,6 +16,8 @@ struct UICalendarViewRepresentable: UIViewRepresentable {
         let view = UICalendarView()
         let selection = UICalendarSelectionSingleDate(delegate: context.coordinator)
         view.selectionBehavior = selection
+        view.locale = Locale(identifier: "ja_JP")
+        view.calendar = Calendar(identifier: .gregorian)
         return view
     }
 

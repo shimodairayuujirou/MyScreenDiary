@@ -9,6 +9,7 @@ class ContentViewModel: ObservableObject {
     @Published var selectedRecord: Record? = nil
     @Published var alertMessage: String? = nil
     @Published var showAlert = false
+    @Published var showDetail: Bool = false
 
     init() {
         subscribeDidSelectDate()
@@ -19,17 +20,19 @@ class ContentViewModel: ObservableObject {
             .sink { [weak self] dateComponents in
                 guard let self = self else { return }
 
-                guard let dateComponents = dateComponents else {
+                guard var dateComponents = dateComponents else {
                     self.selectedRecord = nil
                     print("日付が選択されていません")
                     return
                 }
 
-                var calendar = Calendar.current
-                calendar.timeZone = .current
+                dateComponents.calendar = Calendar(identifier: .gregorian)
+                dateComponents.timeZone = .current
 
-                if let date = calendar.date(from: dateComponents) {
+                if let date = dateComponents.date {
                     self.fetchRecord(for: date)
+                } else {
+                    print("日付変換失敗")
                 }
             }
             .store(in: &cancellables)
@@ -42,6 +45,7 @@ class ContentViewModel: ObservableObject {
         }
 
         let dateFormatter = DateFormatter()
+        dateFormatter.calendar = Calendar(identifier: .gregorian)
         dateFormatter.dateFormat = "yyyyMMdd"
         let dateString = dateFormatter.string(from: date)
         let documentId = "\(userId)_\(dateString)"
@@ -65,8 +69,8 @@ class ContentViewModel: ObservableObject {
             do {
                 let record = try Record(from: data)
                 self.selectedRecord = record
+                self.showDetail = true
                 print("取得成功: \(record)")
-                
             } catch {
                 self.showError("データの変換に失敗しました")
             }

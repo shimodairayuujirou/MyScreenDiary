@@ -8,6 +8,7 @@ struct RootView: View {
         Group {
             if authViewModel.isAuthenticated {
                 PageWrapperView()
+                    .ignoresSafeArea(.keyboard)
             } else {
                 AuthView()
             }

@@ -27,11 +27,10 @@ struct CalendarView: View {
                     showDetail = true
                 }
             }
-            .navigationDestination(isPresented: $showDetail) {
+            .navigationDestination(isPresented: $viewModel.showDetail) {
                 if let record = viewModel.selectedRecord {
                     RecordDetailView(
                         viewModel: DetailViewModel(record: record),
-                        record: record
                     )
                 }
             }

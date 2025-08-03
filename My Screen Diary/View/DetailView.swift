@@ -4,7 +4,6 @@ struct RecordDetailView: View {
     @ObservedObject var viewModel: DetailViewModel
     @Environment(\.dismiss) var dismiss
     
-    let record: Record
     let purposes = ["SNS", "動画", "ゲーム", "仕事", "その他"]
     
     var body: some View {
@@ -24,9 +23,31 @@ struct RecordDetailView: View {
                 }
                 
                 Section(header: Text("利用内容")) {
-                    Picker("使用目的", selection: $viewModel.record.purpose) {
-                        ForEach(purposes, id: \.self) {
-                            Text($0)
+                    HStack{
+                        Text("使用目的")
+                        Spacer()
+                        Menu {
+                            ForEach(purposes, id: \.self) { purpose in
+                                Button(action: {
+                                    viewModel.record.purpose = purpose
+                                }) {
+                                    HStack {
+                                        Text(purpose)
+                                        Spacer()
+                                        if viewModel.record.purpose == purpose {
+                                            Image(systemName: "checkmark")
+                                                .foregroundColor(.accentColor)
+                                        }
+                                    }
+                                }
+                            }
+                        } label: {
+                            HStack {
+                                Text(viewModel.record.purpose)
+                                    .foregroundColor(.gray)
+                                Image(systemName: "chevron.down")
+                                    .foregroundColor(.gray)
+                            }
                         }
                     }
                     
@@ -85,5 +106,8 @@ struct RecordDetailView: View {
         }
         .background(Color(hex: "#F1F1E6"))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .hideKeyboardOnTap()
+        .environment(\.locale, Locale(identifier: "ja_JP"))
+        .environment(\.calendar, Calendar(identifier: .gregorian))
     }
 }

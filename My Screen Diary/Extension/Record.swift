@@ -1,33 +1,5 @@
 import FirebaseFirestore
 
-//extension Record {
-//    init(from data: [String: Any]) throws {
-//        guard let date = (data["date"] as? Timestamp)?.dateValue(),
-//              let userId = data["userId"] as? String,
-//              let duration = data["duration"] as? Int,
-//              let purpose = data["purpose"] as? String,
-//              let satisfaction = data["satisfaction"] as? Int,
-//              let memo = data["memo"] as? String else {
-//            throw NSError(domain: "RecordParsing", code: -1, userInfo: [NSLocalizedDescriptionKey: "Recordのデータ変換に失敗"])
-//        }
-//
-//        // duration（分）を Date に変換（usetime に一時的に格納）
-//        let calendar = Calendar.current
-//        let now = Date()
-//        let hour = duration / 60
-//        let minute = duration % 60
-//        let usetime = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: now) ?? now
-//
-//        self.id = UUID().uuidString
-//        self.userId = userId
-//        self.date = date
-//        self.usetime = usetime
-//        self.purpose = purpose
-//        self.satisfaction = Double(satisfaction)
-//        self.memo = memo
-//    }
-//}
-
 extension Record {
     init(from data: [String: Any]) throws {
         let date = (data["date"] as? Timestamp)?.dateValue() ?? Date()

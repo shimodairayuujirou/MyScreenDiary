@@ -17,6 +17,7 @@ class RecordViewModel: ObservableObject {
 
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyyMMdd"
+        dateFormatter.calendar = Calendar(identifier: .gregorian)
         let dateString = dateFormatter.string(from: record.date)
         let documentId = "\(userId)_\(dateString)"
 
