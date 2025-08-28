@@ -36,7 +36,7 @@ struct RecordDetailView: View {
                                         Spacer()
                                         if viewModel.record.purpose == purpose {
                                             Image(systemName: "checkmark")
-                                                .foregroundColor(.accentColor)
+                                            .foregroundColor(.accentColor)
                                         }
                                     }
                                 }

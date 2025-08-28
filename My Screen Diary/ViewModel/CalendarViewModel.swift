@@ -2,14 +2,16 @@ import FirebaseAuth
 import FirebaseFirestore
 import Combine
 
-class ContentViewModel: ObservableObject {
-    private(set) var didSelectDateSubject: PassthroughSubject<DateComponents?, Never> = .init()
+class CalendarViewModel: ObservableObject {
+    
+    let didSelectDateSubject = PassthroughSubject<DateComponents?, Never>()
     private var cancellables: Set<AnyCancellable> = []
 
     @Published var selectedRecord: Record? = nil
     @Published var alertMessage: String? = nil
     @Published var showAlert = false
     @Published var showDetail: Bool = false
+    @Published var markedDates: [DateComponents] = []
 
     init() {
         subscribeDidSelectDate()
@@ -76,6 +78,33 @@ class ContentViewModel: ObservableObject {
             }
         }
     }
+
+    // 記録がある日をmarkedDatesに入れる
+    func fetchMarkedDates() {
+        guard let userId = Auth.auth().currentUser?.uid else { return }
+
+        Firestore.firestore()
+            .collection("records")
+            .whereField("userId", isEqualTo: userId)
+            .getDocuments { [weak self] snapshot, error in
+                guard let self = self else { return }
+
+                if let docs = snapshot?.documents {
+                    let calendar = Calendar(identifier: .gregorian)
+
+                    self.markedDates = docs.compactMap { doc in
+                        if let timestamp = doc.data()["date"] as? Timestamp {
+                            let date = timestamp.dateValue()
+                            let comps = calendar.dateComponents([.year, .month, .day], from: date)
+                            print("📌 取得日: \(date) → comps: \(comps)")
+                            return comps
+                        }
+                        return nil
+                    }
+                }
+            }
+    }
+
 
     private func showError(_ message: String) {
         self.alertMessage = message

@@ -2,15 +2,18 @@ import SwiftUI
 import Combine
 
 struct CalendarView: View {
-    @StateObject private var viewModel: ContentViewModel = .init()
+    @StateObject private var viewModel: CalendarViewModel = .init()
     @State private var showDetail = false
 
     var body: some View {
         NavigationStack {
             ZStack {
                 VStack {
-                    UICalendarViewRepresentable(didSelectDateSubject: viewModel.didSelectDateSubject)
+                    UICalendarViewRepresentable(didSelectDateSubject: viewModel.didSelectDateSubject, markedDates: viewModel.markedDates)
                         .padding(.bottom, 60)
+                        .onAppear {
+                            viewModel.fetchMarkedDates()
+                        }
                         .alert(isPresented: $viewModel.showAlert) {
                             Alert(title: Text("エラー"),
                                   message: Text(viewModel.alertMessage ?? "不明なエラー"),
