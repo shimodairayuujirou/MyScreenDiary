@@ -8,7 +8,9 @@ struct PageWrapperView: View {
             Group {
                 switch selectedPage {
                 case .calendar:
-                    CalendarView()
+                    NavigationStack {
+                        CalendarView()
+                    }
                 case .chart:
                     ChartView()
                 case .settings:

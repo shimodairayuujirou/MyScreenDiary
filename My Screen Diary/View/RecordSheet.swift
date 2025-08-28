@@ -17,8 +17,10 @@ struct RecordSheetView: View {
                 .bold()
                 Spacer()
                 Button("保存") {
+                    viewModel.onSaveSuccess = {dismiss()}
                     viewModel.saveRecord()
-                    dismiss()
+                }.alert(isPresented: $viewModel.showAlert) {
+                    Alert(title: Text("エラー"), message: Text(viewModel.alertMessage ?? "不明なエラー"), dismissButton: .default(Text("OK")))
                 }
                 .foregroundColor(Color(hex: "#F1F1E6"))
                 .bold()
@@ -29,7 +31,8 @@ struct RecordSheetView: View {
             Form {
                 Section(header: Text("日時情報")) {
                     DatePicker("日付を選択", selection: $viewModel.record.date, displayedComponents: [.date])
-                    
+                        .environment(\.locale, Locale(identifier: "ja_JP"))
+                        .environment(\.calendar, Calendar(identifier: .gregorian))
                     DatePicker("使用時間", selection: $viewModel.record.usetime, displayedComponents: [.hourAndMinute])
                         .datePickerStyle(.compact)
                 }
@@ -49,7 +52,7 @@ struct RecordSheetView: View {
 
                 Section(header: Text("一言メモ")) {
                     TextEditor(text: $viewModel.record.memo)
-                        .frame(height: 100)
+                        .frame(height: 105)
                         .background(Color.white)
                         .cornerRadius(8)
                 }
@@ -59,8 +62,4 @@ struct RecordSheetView: View {
         .background(Color(hex: "#F1F1E6"))
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-}
-
-#Preview {
-    RecordSheetView()
 }
