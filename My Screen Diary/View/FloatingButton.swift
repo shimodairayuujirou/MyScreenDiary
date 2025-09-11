@@ -25,6 +25,3 @@ struct FloatingButton: View {
         }
     }
 }
-#Preview {
-    FloatingButton()
-}

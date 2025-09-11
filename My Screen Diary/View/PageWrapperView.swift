@@ -21,7 +21,3 @@ struct PageWrapperView: View {
         }
     }
 }
-
-#Preview {
-    PageWrapperView()
-}

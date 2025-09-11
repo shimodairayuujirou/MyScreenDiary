@@ -28,6 +28,3 @@ struct SettingsView: View {
         .background(Color(hex: "#F1F1E6").ignoresSafeArea())
     }
 }
-#Preview {
-    SettingsView()
-}
