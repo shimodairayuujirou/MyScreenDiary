@@ -48,6 +48,7 @@ class AuthViewModel: ObservableObject {
     }
 }
 
+//rootViewを再描画させる
 class AppState: ObservableObject {
     @Published var rootViewId = UUID()
 }

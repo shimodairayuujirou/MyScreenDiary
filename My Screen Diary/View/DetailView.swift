@@ -83,8 +83,9 @@ struct RecordDetailView: View {
                 }
 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("保存") {
-                        viewModel.updateRecord { success in
+                    Button("更新") {
+                        Task {
+                            let success = await viewModel.updateRecord()
                             if success {
                                 dismiss()
                             }

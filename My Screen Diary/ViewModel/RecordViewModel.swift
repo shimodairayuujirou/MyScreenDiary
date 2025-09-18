@@ -2,16 +2,14 @@ import Foundation
 import FirebaseFirestore
 import FirebaseAuth
 
+@MainActor
 class RecordViewModel: ObservableObject {
     @Published var record = Record()
-    @Published var alertMessage: String? = nil
-    @Published var showAlert = false
-    var onSaveSuccess: (() -> Void)?
-    
-    func saveRecord() {
+    @Published var saveState: SaveState = .idle
+
+    func saveRecord() async {
         guard let userId = Auth.auth().currentUser?.uid else {
-            alertMessage = "ユーザーIDが取得できませんでした"
-            showAlert = true
+            saveState = .failure("ログイン情報を取得できませんでした")
             return
         }
 
@@ -24,38 +22,48 @@ class RecordViewModel: ObservableObject {
         let db = Firestore.firestore()
         let docRef = db.collection("records").document(documentId)
 
-        // 既に存在するか確認
-        docRef.getDocument { snapshot, error in
-            if let error = error {
-                self.alertMessage = "取得失敗: \(error.localizedDescription)"
-                self.showAlert = true
-                return
-            }
-
-            if let snapshot = snapshot, snapshot.exists {
-                self.alertMessage = "同じ日付の記録がすでに存在します"
-                self.showAlert = true
+        do {
+            let snapshot = try await docRef.getDocument()
+            if snapshot.exists {
+                saveState = .failure("この日には既に記録があります")
                 return
             }
 
             let data: [String: Any] = [
                 "userId": userId,
-                "date": self.record.date,
-                "duration": self.record.durationMinutes,
-                "purpose": self.record.purpose,
-                "satisfaction": Int(self.record.satisfaction),
-                "memo": self.record.memo
+                "date": record.date,
+                "duration": record.durationMinutes,
+                "purpose": record.purpose,
+                "satisfaction": Int(record.satisfaction),
+                "memo": record.memo
             ]
 
-            docRef.setData(data) { error in
-                if let error = error {
-                    self.alertMessage = "保存失敗: \(error.localizedDescription)"
-                    self.showAlert = true
-                } else {
-                    print("保存成功: \(data)")
-                    self.onSaveSuccess?()
-                }
-            }
+            try await docRef.setData(data)
+            saveState = .success
+
+        } catch {
+            saveState = .failure("通信エラーが発生しました。もう一度お試しください")
+            print("Firestore error:", error.localizedDescription)
+        }
+    }
+}
+
+enum SaveState: Equatable {
+    case idle
+    case saving
+    case success
+    case failure(String)
+
+    static func == (lhs: SaveState, rhs: SaveState) -> Bool {
+        switch (lhs, rhs) {
+        case (.idle, .idle),
+             (.saving, .saving),
+             (.success, .success):
+            return true
+        case (.failure(let lMsg), .failure(let rMsg)):
+            return lMsg == rMsg
+        default:
+            return false
         }
     }
 }
