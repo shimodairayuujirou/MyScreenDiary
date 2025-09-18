@@ -2,6 +2,7 @@ import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
 
+@MainActor
 class DetailViewModel: ObservableObject {
     @Published var record: Record
     @Published var showAlert: Bool = false
@@ -10,13 +11,12 @@ class DetailViewModel: ObservableObject {
     init(record: Record) {
         self.record = record
     }
-    
-    func updateRecord(completion: @escaping (Bool) -> Void) {
+
+    func updateRecord() async -> Bool {
         guard let userId = Auth.auth().currentUser?.uid else {
             self.alertMessage = "ユーザーIDが取得できませんでした"
             self.showAlert = true
-            completion(false)
-            return
+            return false
         }
 
         let dateFormatter = DateFormatter()
@@ -35,16 +35,14 @@ class DetailViewModel: ObservableObject {
             "memo": record.memo
         ]
 
-        db.collection("records").document(documentId).updateData(data) { error in
-            if let error = error {
-                self.alertMessage = "更新失敗: \(error.localizedDescription)"
-                self.showAlert = true
-                completion(false)
-            } else {
-                print("更新成功: \(data)")
-                completion(true)
-            }
+        do {
+            try await db.collection("records").document(documentId).setData(data, merge: true)
+            print("更新成功: \(data)")
+            return true
+        } catch {
+            self.alertMessage = "更新失敗: \(error.localizedDescription)"
+            self.showAlert = true
+            return false
         }
     }
-
 }
