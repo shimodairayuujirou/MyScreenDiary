@@ -2,28 +2,27 @@ import FirebaseAuth
 import FirebaseFirestore
 import Combine
 
+@MainActor
 class CalendarViewModel: ObservableObject {
-    
     let didSelectDateSubject = PassthroughSubject<DateComponents?, Never>()
     private var cancellables: Set<AnyCancellable> = []
 
     @Published var selectedRecord: Record? = nil
-    @Published var alertMessage: String? = nil
-    @Published var showAlert = false
-    @Published var showDetail: Bool = false
     @Published var markedDates: [DateComponents] = []
+    @Published var state: CalendarState = .idle
 
     init() {
         subscribeDidSelectDate()
     }
+
     private func subscribeDidSelectDate() {
         didSelectDateSubject
-            .receive(on: DispatchQueue.main)
             .sink { [weak self] dateComponents in
                 guard let self = self else { return }
 
                 guard var dateComponents = dateComponents else {
                     self.selectedRecord = nil
+                    self.state = .idle
                     print("日付が選択されていません")
                     return
                 }
@@ -32,17 +31,19 @@ class CalendarViewModel: ObservableObject {
                 dateComponents.timeZone = .current
 
                 if let date = dateComponents.date {
-                    self.fetchRecord(for: date)
+                    Task {
+                        await self.fetchRecord(for: date)
+                    }
                 } else {
-                    print("日付変換失敗")
+                    self.state = .error("日付変換失敗")
                 }
             }
             .store(in: &cancellables)
     }
 
-    private func fetchRecord(for date: Date) {
+    func fetchRecord(for date: Date) async {
         guard let userId = Auth.auth().currentUser?.uid else {
-            self.showError("ユーザーがログインしていません")
+            self.state = .error("ユーザーがログインしていません")
             return
         }
 
@@ -54,60 +55,67 @@ class CalendarViewModel: ObservableObject {
 
         let docRef = Firestore.firestore().collection("records").document(documentId)
 
-        docRef.getDocument { [weak self] snapshot, error in
-            guard let self = self else { return }
-
-            if let error = error {
-                self.showError("取得失敗: \(error.localizedDescription)")
-                return
-            }
-
-            guard let data = snapshot?.data() else {
+        state = .loading
+        do {
+            let snapshot = try await docRef.getDocument()
+            guard let data = snapshot.data() else {
                 self.selectedRecord = nil
-                print("この日に記録は存在しません")
+                self.state = .notFound(date)
                 return
             }
 
-            do {
-                let record = try Record(from: data)
-                self.selectedRecord = record
-                self.showDetail = true
-                print("取得成功: \(record)")
-            } catch {
-                self.showError("データの変換に失敗しました")
-            }
+            let record = try Record(from: data)
+            self.selectedRecord = record
+            self.state = .success(record)
+        } catch {
+            self.state = .error("取得失敗: \(error.localizedDescription)")
         }
     }
 
     // 記録がある日をmarkedDatesに入れる
-    func fetchMarkedDates() {
+    func fetchMarkedDates() async {
         guard let userId = Auth.auth().currentUser?.uid else { return }
+        do {
+            let snapshot = try await Firestore.firestore()
+                .collection("records")
+                .whereField("userId", isEqualTo: userId)
+                .getDocuments()
 
-        Firestore.firestore()
-            .collection("records")
-            .whereField("userId", isEqualTo: userId)
-            .getDocuments { [weak self] snapshot, error in
-                guard let self = self else { return }
-
-                if let docs = snapshot?.documents {
-                    let calendar = Calendar(identifier: .gregorian)
-
-                    self.markedDates = docs.compactMap { doc in
-                        if let timestamp = doc.data()["date"] as? Timestamp {
-                            let date = timestamp.dateValue()
-                            let comps = calendar.dateComponents([.year, .month, .day], from: date)
-                            print("📌 取得日: \(date) → comps: \(comps)")
-                            return comps
-                        }
-                        return nil
-                    }
+            let calendar = Calendar(identifier: .gregorian)
+            self.markedDates = snapshot.documents.compactMap { doc in
+                if let timestamp = doc.data()["date"] as? Timestamp {
+                    let date = timestamp.dateValue()
+                    return calendar.dateComponents([.year, .month, .day], from: date)
                 }
+                return nil
             }
+        } catch {
+            print("取得失敗: \(error.localizedDescription)")
+        }
     }
+}
 
 
-    private func showError(_ message: String) {
-        self.alertMessage = message
-        self.showAlert = true
+enum CalendarState: Equatable {
+    case idle
+    case loading
+    case success(Record)
+    case notFound(Date)
+    case error(String)
+
+    static func == (lhs: CalendarState, rhs: CalendarState) -> Bool {
+        switch (lhs, rhs) {
+        case (.idle, .idle),
+             (.loading, .loading):
+            return true
+        case (.success, .success): // Record の中身までは比較しない
+            return true
+        case (.notFound, .notFound):
+            return true
+        case (.error(let lMsg), .error(let rMsg)):
+            return lMsg == rMsg
+        default:
+            return false
+        }
     }
 }

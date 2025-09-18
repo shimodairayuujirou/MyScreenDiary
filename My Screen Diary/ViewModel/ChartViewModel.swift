@@ -1,6 +1,7 @@
 import Foundation
 import FirebaseFirestore
 
+@MainActor
 class ChartViewModel: ObservableObject {
     @Published var dailyUsages: [DailyUsage] = []
     @Published var weeklyUsages: [[DailyUsage]] = []
@@ -9,42 +10,39 @@ class ChartViewModel: ObservableObject {
     private var db = Firestore.firestore()
 
     init() {
-        fetchData()
+        Task {
+            await fetchData()
+        }
     }
 
-    func fetchData() {
-        db.collection("records")
-            .order(by: "date", descending: false)
-            .getDocuments { snapshot, error in
-                if let error = error {
-                    print("Firestore error: \(error)")
-                    return
-                }
+    func fetchData() async {
+        do {
+            let snapshot = try await db.collection("records")
+                .order(by: "date", descending: false)
+                .getDocuments()
 
-                guard let documents = snapshot?.documents else { return }
-
-                let usages: [DailyUsage] = documents.compactMap { doc in
-                    guard let date = (doc["date"] as? Timestamp)?.dateValue(),
-                          let minutes = doc["duration"] as? Int else {
-                        return nil
-                    }
-                    return DailyUsage(date: date, minutes: minutes)
+            let usages: [DailyUsage] = snapshot.documents.compactMap { doc in
+                guard let date = (doc["date"] as? Timestamp)?.dateValue(),
+                      let minutes = doc["duration"] as? Int else {
+                    return nil
                 }
-
-                DispatchQueue.main.async {
-                    self.dailyUsages = usages
-                    let (weeks, latestIndex) = self.generateWeeklyUsages(from: usages)
-                    self.weeklyUsages = weeks
-                    self.currentWeekIndex = latestIndex
-                }
+                return DailyUsage(date: date, minutes: minutes)
             }
+
+            self.dailyUsages = usages
+            let (weeks, latestIndex) = self.generateWeeklyUsages(from: usages)
+            self.weeklyUsages = weeks
+            self.currentWeekIndex = latestIndex
+
+        } catch {
+            print("Firestore error: \(error.localizedDescription)")
+        }
     }
 
     // 強制的に日曜始まりにする関数
     private func startOfWeek(for date: Date) -> Date {
         var calendar = Calendar(identifier: .gregorian)
-        calendar.firstWeekday = 1 // 日曜始まりに固定
-
+        calendar.firstWeekday = 1
         let components = calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)
         return calendar.date(from: components)!
     }
@@ -52,14 +50,13 @@ class ChartViewModel: ObservableObject {
     func generateWeeklyUsages(from allData: [DailyUsage]) -> ([[DailyUsage]], Int) {
         var calendar = Calendar.current
         calendar.locale = Locale(identifier: "ja_JP")
-        calendar.firstWeekday = 1 // 日曜
+        calendar.firstWeekday = 1
 
         guard let minDate = allData.map({ $0.date }).min(),
               let maxDate = allData.map({ $0.date }).max() else {
             return ([], 0)
         }
 
-        // 強制的に日曜始まりで範囲を計算
         var currentWeekStart = startOfWeek(for: minDate)
         let endOfWeek = startOfWeek(for: maxDate)
 
@@ -71,7 +68,6 @@ class ChartViewModel: ObservableObject {
             let weekData = completeWeekData(for: currentWeekStart, data: allData)
             weeks.append(weekData)
 
-            // 最新の週をインデックスとして保持（maxDateを含む週）
             if maxDate >= currentWeekStart,
                maxDate < calendar.date(byAdding: .day, value: 7, to: currentWeekStart)! {
                 latestIndex = index
@@ -100,27 +96,23 @@ class ChartViewModel: ObservableObject {
         return completed
     }
     
-    // 今週と先週の比率を計算する（%）
     func compareWithPreviousWeek(at index: Int) -> Int? {
-        guard index > 0,
-              index < weeklyUsages.count else { return nil }
+        guard index > 0, index < weeklyUsages.count else { return nil }
         
         let thisWeek = weeklyUsages[index].totalMinutes
         let lastWeek = weeklyUsages[index - 1].totalMinutes
-        
-        guard lastWeek > 0 else { return nil } // ゼロ除算防止
-        
+        guard lastWeek > 0 else { return nil }
+
         return Int(Double(thisWeek) / Double(lastWeek) * 100)
     }
 }
 
 extension Array where Element == DailyUsage {
-    /// 週の合計時間（分）
+    //日の合計時間
     var totalMinutes: Int {
         self.map { $0.minutes }.reduce(0, +)
     }
-    
-    /// 週の平均使用時間（分）
+    //週の１日平均時間
     var averageMinutesPerDay: Int {
         guard !self.isEmpty else { return 0 }
         return totalMinutes / self.count

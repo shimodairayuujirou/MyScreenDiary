@@ -17,10 +17,32 @@ struct RecordSheetView: View {
                 .bold()
                 Spacer()
                 Button("保存") {
-                    viewModel.onSaveSuccess = {dismiss()}
-                    viewModel.saveRecord()
-                }.alert(isPresented: $viewModel.showAlert) {
-                    Alert(title: Text("エラー"), message: Text(viewModel.alertMessage ?? "不明なエラー"), dismissButton: .default(Text("OK")))
+                    Task {
+                        await viewModel.saveRecord()
+                    }
+                }
+                .alert(isPresented: Binding<Bool>(
+                    get: {
+                        if case .failure(_) = viewModel.saveState { return true }
+                        return false
+                    },
+                    set: { _ in viewModel.saveState = .idle }
+                )) {
+                    if case .failure(let message) = viewModel.saveState {
+                        return Alert(
+                            title: Text("エラー"),
+                            message: Text(message),
+                            dismissButton: .default(Text("OK"))
+                        )
+                    } else {
+                        return Alert(title: Text("エラー"))
+                    }
+                }
+                .onChange(of: viewModel.saveState) { oldValue, newValue in
+                    if case .success = newValue {
+                        dismiss()
+                        viewModel.saveState = .idle
+                    }
                 }
                 .foregroundColor(Color(hex: "#F1F1E6"))
                 .bold()
